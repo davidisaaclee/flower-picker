@@ -6,17 +6,41 @@
     <title>flower-picker demo</title>
     <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="../flower-picker.html">
+    <link rel="import" href="../../../polymer/polymer.html">
+    <link rel="import" href="../../../polymer-gestures/polymer-gestures.html">
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <div id="container">
-      <flower-picker radius="100" on-selected="handleSelected"></flower-picker>
+      <flower-picker radius="100" on-selected="handleSelected" touch-action="none"></flower-picker>
     </div>
     <div id="pickedElement"></div>
     <script>
-      document.querySelector('flower-picker').addEventListener('selected', function (evt) {
+      var fp = document.querySelector('flower-picker');
+      
+      fp.addEventListener('selected', function (evt) {
         document.querySelector('#pickedElement').innerHTML = 'selected: ' + evt.detail.value;
       });
+      
+      function handleDown(evt) {
+        console.log('down')
+        fp.start({x: evt.clientX, y: evt.clientY});
+      }
+      
+      function handleUp(evt) {
+        console.log('up')
+        fp.finish({x: evt.clientX, y: evt.clientY});
+      }
+      
+      //- PolymerGestures.addEventListener(fp, 'down', handleDown);
+      
+      fp.addEventListener('down', handleDown);
+      fp.addEventListener('up', handleUp);
+      
+      //- fp.addEventListener('mousedown', handleDown);
+      //- fp.addEventListener('mouseup', handleUp);
+      //- fp.addEventListener('touchdown', handleDown);
+      //- fp.addEventListener('touchup', handleUp);
       
       //- var petals = [
       //-   {
@@ -194,7 +218,7 @@
           ]
         }
       ]
-      document.querySelector('flower-picker').petals = petals;
+      fp.petals = petals;
     </script>
   </body>
 </html>

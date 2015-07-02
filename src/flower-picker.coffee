@@ -50,8 +50,8 @@ Polymer
       value: 80
 
   listeners:
-    'down': '_handleDown'
-    'up': '_handleUp'
+    # 'down': '_handleDown'
+    # 'up': '_handleUp'
     'track': '_handleTrack'
 
   # ready: () ->
@@ -140,36 +140,14 @@ Polymer
       # console.log "distance: #{distance @_flowers[@_flowers.length - 1].origin, origin}"
       @_deactivateFlower @_flowers[@_flowers.length - 1]
 
-    # offset angle for back petal
-    # angleOffset =
-    #   if backPetalPoint?
-    #   then do ->
-    #     vecDiff =
-    #       x: origin.x - backPetalPoint.x
-    #       y: origin.y - backPetalPoint.y
-    #     compensation =
-    #       if vecDiff.x < 0 then Math.PI
-    #       else if vecDiff.y < 0 then TWO_PI
-    #       else 0
-    #     return Math.PI + Math.atan(vecDiff.y / vecDiff.x) + compensation
-    #   else 0
     angleOffset = (Math.PI / (2 * petals.length)) + Math.PI
-      # if petals.length == 1
-      # then Math.PI
-      # else Math.PI + (Math.PI / (2 * petals.length))
-
-    # if backPetalPoint?
-    #   petals = [ {isBackPetal: true}, petals... ]
 
     petalElements = petals.map (elm, idx) =>
       petal = @_createPetalElement elm, spawningFlowerIndex
       Polymer.dom(flower).appendChild petal
 
       center = polToCar (Math.PI * idx / petals.length + angleOffset), @radius
-      offsetPetal = do -> centerToOffset center, petal
-        # {top, left} = centerToOffset center, petal
-        # top: toCssFigure top
-        # left: toCssFigure left
+      offsetPetal = centerToOffset center, petal
 
       potentialRect =
         rectFromOffset petal.getBoundingClientRect(), {x: offsetPetal.left, y: offsetPetal.top}
@@ -178,7 +156,7 @@ Polymer
         console.log 'not contained: ', petal
 
       this.transform "translate(#{toCssFigure offsetPetal.left}px, #{toCssFigure offsetPetal.top}px)", petal
-      # console.log potentialRect, petal.getBoundingClientRect()
+      # console.log potentialRect, petal.geBoundingClientRect()
 
       return petal
 
