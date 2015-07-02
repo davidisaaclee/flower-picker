@@ -1,0 +1,19 @@
+body {
+  width: 100vw;
+  height: 60vh;
+
+  margin: 0;
+  padding: 0;
+}
+
+#container {
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  background-color: #fee;
+}
+
+.flower-picker .petal {
+  font-size: 16pt;
+  font-family: "Futura", sans-serif;
+}
