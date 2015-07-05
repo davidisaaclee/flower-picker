@@ -49,10 +49,10 @@ Polymer
       type: Number
       value: 80
 
-  listeners:
-    # 'down': '_handleDown'
-    # 'up': '_handleUp'
-    'track': '_handleTrack'
+  # listeners:
+  #   # 'down': '_handleDown'
+  #   # 'up': '_handleUp'
+  #   'track': '_handleTrack'
 
   # ready: () ->
 
