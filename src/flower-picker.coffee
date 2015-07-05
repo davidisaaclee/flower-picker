@@ -286,6 +286,9 @@ Polymer
 
   _lastHover: null
   _handleTrack: (evt, detail) ->
+    evt.stopPropagation?()
+    evt.preventDefault?()
+
     hover = detail.hover()
     this.fire 'trackover', detail, {node: hover}
 
