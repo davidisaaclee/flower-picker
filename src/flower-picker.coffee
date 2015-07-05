@@ -63,11 +63,15 @@ Polymer
     if @_overPetal? and @_overPetal.isLeaf
       this.fire 'selected',
         petal: @_overPetal
-        value: if @_overPetal.value? then @_overPetal.value @_overPetal.model else @_overPetal.model
+        value: do =>
+          if @_overPetal.value?
+          then @_overPetal.value @_overPetal.model
+          else @_overPetal.model
 
     # delete each flower node; return flower list to empty
     @_flowers.forEach (flower) ->
-      Polymer.dom(Polymer.dom(flower.element).parentNode).removeChild(flower.element)
+      Polymer.dom Polymer.dom(flower.element).parentNode
+        .removeChild(flower.element)
     @_flowers = []
     @_overPetal = null
 
@@ -82,7 +86,7 @@ Polymer
 
   # ---- Convenience references ---- #
 
-  _container: () -> this.$['picker-container']
+  _container: () -> @$['picker-container']
 
 
   # ---- Private methods ---- #
@@ -93,8 +97,10 @@ Polymer
     if not model.isBackPetal?
       Polymer.dom(petal).classList.add 'petal'
       Polymer.dom(petal).classList.add 'unselectable'
-      petal.addEventListener 'trackover', (detail) => @_hoverPetal petal, model, flowerIndex
-      petal.addEventListener 'trackout', (detail) => @_unhoverPetal petal
+      petal.addEventListener 'trackover', \
+        (detail) => @_hoverPetal petal, model, flowerIndex
+      petal.addEventListener 'trackout', \
+        (detail) => @_unhoverPetal petal
       Polymer.dom(petal).innerHTML =
         if model.display?
         then model.display(model.model)
@@ -112,32 +118,38 @@ Polymer
     spawningFlowerIndex = @_flowers.length
 
     flower = document.createElement 'div'
-    Polymer.dom(flower).setAttribute 'id', "flower#{spawningFlowerIndex}"
+    flower.id = "flower#{spawningFlowerIndex}"
     Polymer.dom(flower).classList.add 'flower'
     Polymer.dom(this.$['picker-container']).appendChild flower
 
     pistil = document.createElement 'div'
+    pistil.id = "pistil#{spawningFlowerIndex}"
     Polymer.dom(pistil).classList.add 'pistil'
-    Polymer.dom(pistil).classList.add 'unselectable'
-    Polymer.dom(pistil).setAttribute 'id', "pistil#{spawningFlowerIndex}"
+    Polymer.dom(pistil).classList.add 'pistil'
     Polymer.dom(flower).appendChild pistil
 
     offsetFlower = do ->
       {top, left} = centerToOffset origin, flower
       left: toCssFigure left
       top: toCssFigure top
-    this.transform "translate(#{offsetFlower.left}px, #{offsetFlower.top}px)", flower
+    this.transform "translate(\
+      #{offsetFlower.left}px, \
+      #{offsetFlower.top}px)", \
+      flower
 
     offsetPistil = do ->
-      {top, left} = centerToOffset (elementCenterPosition flower, flower), pistil
+      flowerCenter = elementCenterPosition flower, flower
+      {top, left} = centerToOffset flowerCenter, pistil
       left: toCssFigure left
       top: toCssFigure top
-    this.transform "translate(#{offsetPistil.left}px, #{offsetPistil.top}px)", pistil
-    pistil.addEventListener 'trackover', (evt) => @_hoverPistil spawningFlowerIndex
+    this.transform \
+      "translate(#{offsetPistil.left}px, #{offsetPistil.top}px)", \
+      pistil
+    pistil.addEventListener 'trackover', \
+      (evt) => @_hoverPistil spawningFlowerIndex
 
     # deactivate lower flowers
     if @_flowers.length != 0
-      # console.log "distance: #{distance @_flowers[@_flowers.length - 1].origin, origin}"
       @_deactivateFlower @_flowers[@_flowers.length - 1]
 
     angleOffset = (Math.PI / (2 * petals.length)) + Math.PI
@@ -150,13 +162,19 @@ Polymer
       offsetPetal = centerToOffset center, petal
 
       potentialRect =
-        rectFromOffset petal.getBoundingClientRect(), {x: offsetPetal.left, y: offsetPetal.top}
+        rectFromOffset petal.getBoundingClientRect(),
+          x: offsetPetal.left
+          y: offsetPetal.top
 
-      if not (checkContainment potentialRect, @_container().getBoundingClientRect())
-        console.log 'not contained: ', petal
+      currentBounds = @_container().getBoundingClientRect()
+      if not (checkContainment potentialRect, currentBounds)
+        console.log 'not contained: ', petal, currentBounds
 
-      this.transform "translate(#{toCssFigure offsetPetal.left}px, #{toCssFigure offsetPetal.top}px)", petal
-      # console.log potentialRect, petal.geBoundingClientRect()
+      this.transform \
+        "translate(\
+          #{toCssFigure offsetPetal.left}px, \
+          #{toCssFigure offsetPetal.top}px)", \
+        petal
 
       return petal
 
@@ -183,7 +201,8 @@ Polymer
   _popFlower: () ->
     if @_flowers.length > 0
       flower = @_flowers[@_flowers.length - 1]
-      Polymer.dom(Polymer.dom(flower.element).parentNode).removeChild(flower.element)
+      flowerParent = Polymer.dom(flower.element).parentNode
+      Polymer.dom(flowerParent).removeChild(flower.element)
       @_flowers.splice (@_flowers.length - 1), 1
 
       if @_flowers.length != 0
@@ -203,7 +222,7 @@ Polymer
     Polymer.dom(linkElm).classList.add 'pistil-link'
     linkElm.style['position'] = 'absolute'
     linkElm.style['width'] = "#{@radius}px"
-    linkElm.style['hßeight'] = '5px'
+    linkElm.style['height'] = '5px'
 
     linkElm.style['transform'] = "rotate(#{angle}rad)"
     # linkElm.style['-webkit-transform'] = "rotate(#{angle}rad)"
@@ -224,16 +243,19 @@ Polymer
       @_overPetal = petalModel
       elementCenter = do =>
         petalRect = petalElement.getBoundingClientRect()
-        fieldRect = this.$['picker-container'].getBoundingClientRect()
+        fieldRect = @_container().getBoundingClientRect()
         x: petalRect.left - fieldRect.left + (petalRect.width / 2)
         y: petalRect.top - fieldRect.top + (petalRect.height / 2)
       if not @_overPetal.isLeaf
         Polymer.dom(petalElement).classList.add 'over-branch'
+
+        currFlowerElm = @_flowers[@_flowers.length - 1].element
         @_spawnFlower \
           elementCenter, \
           @_overPetal.children, \
-          (elementCenterPosition @_flowers[@_flowers.length - 1].element, this.$['picker-container'])
-        @_createLinkElementFrom flowerIndex
+          (elementCenterPosition currFlowerElm, @_container())
+
+        # @_createLinkElementFrom flowerIndex
 
   _unhoverPetal: (petalElement) ->
     petalElement.classList.remove 'over-petal'
@@ -251,13 +273,13 @@ Polymer
     # TODO
 
   _handleDown: ({detail}) ->
-    fieldRect = this.$['picker-container'].getBoundingClientRect()
+    fieldRect = @_container().getBoundingClientRect()
     @start
       x: detail.x - fieldRect.left
       y: detail.y - fieldRect.top
 
   _handleUp: ({detail}) ->
-    fieldRect = this.$['picker-container'].getBoundingClientRect()
+    fieldRect = @_container().getBoundingClientRect()
     @finish
       x: detail.x - fieldRect.left
       y: detail.y - fieldRect.top
