@@ -17,19 +17,33 @@
     <div id="pickedElement"></div>
     <script>
       var fp = document.querySelector('flower-picker');
+      var readyForFinish = false;
+      var readyForStart  = true;
       
       fp.addEventListener('selected', function (evt) {
         document.querySelector('#pickedElement').innerHTML = 'selected: ' + evt.detail.value;
       });
       
       function handleDown(evt) {
-        console.log('down')
-        fp.start({x: evt.clientX, y: evt.clientY});
+        if (readyForStart) {
+          console.log('down')
+          readyForFinish = false;
+          readyForStart = false;
+          setTimeout(function () {
+            readyForFinish = true;
+            console.log('reset');
+          }, 200);
+          fp.start({x: evt.clientX, y: evt.clientY});
+        }
       }
       
       function handleUp(evt) {
-        console.log('up')
-        fp.finish({x: evt.clientX, y: evt.clientY});
+        if (readyForFinish) {
+          readyForFinish = false;
+          readyForStart = true;
+          console.log('up')
+          fp.finish({x: evt.clientX, y: evt.clientY});
+        }
       }
       
       fp.addEventListener('down', handleDown);

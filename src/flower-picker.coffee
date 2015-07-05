@@ -57,6 +57,7 @@ Polymer
   # ready: () ->
 
   start: (origin) ->
+    @_isActive = true
     @_spawnFlower origin, @petals
 
   finish: ({x, y}) ->
@@ -74,6 +75,7 @@ Polymer
         .removeChild(flower.element)
     @_flowers = []
     @_overPetal = null
+    @_isActive = false
 
   # ---- State fields ---- #
 
@@ -83,6 +85,8 @@ Polymer
   # state: currently hovered-over petal
   _overPetal: null
 
+  # is a flower currently being displayed?
+  _isActive: false
 
   # ---- Convenience references ---- #
 
@@ -98,6 +102,8 @@ Polymer
       Polymer.dom(petal).classList.add 'petal'
       Polymer.dom(petal).classList.add 'unselectable'
       petal.addEventListener 'trackover', \
+        (detail) => @_hoverPetal petal, model, flowerIndex
+      petal.addEventListener 'down', \
         (detail) => @_hoverPetal petal, model, flowerIndex
       petal.addEventListener 'trackout', \
         (detail) => @_unhoverPetal petal
@@ -269,14 +275,17 @@ Polymer
       for i in [(@_flowers.length - 1)..(depth + 1)] by -1
         @_popFlower()
 
-  _unhoverPistil: (index) ->
-    # TODO
+  # _unhoverPistil: (index) ->
+  #   # TODO
 
-  _handleDown: ({detail}) ->
-    fieldRect = @_container().getBoundingClientRect()
-    @start
-      x: detail.x - fieldRect.left
-      y: detail.y - fieldRect.top
+  # _handleDown: ({detail}) ->
+  #   if @_isActive
+  #     fieldRect = @_container().getBoundingClientRect()
+  #     @start
+  #       x: detail.x - fieldRect.left
+  #       y: detail.y - fieldRect.top
+  #   else
+  #     console.log detail
 
   _handleUp: ({detail}) ->
     fieldRect = @_container().getBoundingClientRect()
