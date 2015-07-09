@@ -66,14 +66,15 @@ Polymer
       value: false
 
   ready: () ->
-    do @enable
+    Polymer.Gestures.add @_container(), 'track', (_.bind @_handleTrack, this)
+    # do @enable
 
   enable: () ->
-    Polymer.Gestures.add @_container(), 'track', (_.bind @_handleTrack, this)
+    # Polymer.Gestures.add @_container(), 'track', (_.bind @_handleTrack, this)
     @enabled = true
 
   disable: () ->
-    Polymer.Gestures.remove @_container(), 'track', (_.bind @_handleTrack, this)
+    # Polymer.Gestures.remove @_container(), 'track', (_.bind @_handleTrack, this)
     @enabled = false
 
   start: (origin) ->
@@ -310,16 +311,17 @@ Polymer
 
   _lastHover: null
   _handleTrack: (evt, detail) ->
-    evt.stopPropagation?()
-    evt.preventDefault?()
+    if @enabled
+      evt.stopPropagation?()
+      evt.preventDefault?()
 
-    hover = evt.detail.hover()
+      hover = evt.detail.hover()
 
-    this.fire 'trackover', evt.detail, {node: hover}
-    if hover isnt @_lastHover
-      this.fire 'trackout', evt.detail, {node: @_lastHover}
-      @_lastHover = hover
-  
+      this.fire 'trackover', evt.detail, {node: hover}
+      if hover isnt @_lastHover
+        this.fire 'trackout', evt.detail, {node: @_lastHover}
+        @_lastHover = hover
+
   _nullFn: () ->
 
 
