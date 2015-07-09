@@ -1,3 +1,20 @@
+_ = require 'lodash'
+{calculatePositions} = require './radial-plotter'
+
+createElement = (tag, options) ->
+  result = document.createElement tag
+  if options.id?
+    result.id = options.id
+  if options.classes?
+    for cl in options.classes
+      Polymer.dom(result).classList.add cl
+  if options.listeners?
+    for name, callback of options.listeners
+      result.addEventListener name, callback
+  if options.parent?
+    Polymer.dom(options.parent).appendChild result
+  return result
+
 polToCar = (angle, radius) ->
   x: radius * (Math.cos angle)
   y: radius * (Math.sin angle)
@@ -31,10 +48,6 @@ rectFromOffset = (baseRect, {x, y}) ->
   result['bottom'] = result.top + result.height
   return result
 
-# currently unused
-# distance = (v1, v2) ->
-#   Math.sqrt ((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y))
-
 TWO_PI = Math.PI * 2
 
 toCssFigure = (num) -> num.toPrecision(8)
@@ -48,13 +61,6 @@ Polymer
     radius:
       type: Number
       value: 80
-
-  # listeners:
-  #   # 'down': '_handleDown'
-  #   # 'up': '_handleUp'
-  #   'track': '_handleTrack'
-
-  # ready: () ->
 
   start: (origin) ->
     @_isActive = true
@@ -70,9 +76,12 @@ Polymer
           else @_overPetal.model
 
     # delete each flower node; return flower list to empty
-    @_flowers.forEach (flower) ->
-      Polymer.dom Polymer.dom(flower.element).parentNode
-        .removeChild(flower.element)
+    detachFromParent = (element) ->
+      parent = Polymer.dom(element).parentNode
+      Polymer.dom(parent).removeChild(element)
+    _.each @_flowers,
+      _.flow (({element}) -> element), detachFromParent
+
     @_flowers = []
     @_overPetal = null
     @_isActive = false
@@ -82,11 +91,14 @@ Polymer
   # all flowers in the current stack
   _flowers: []
 
-  # state: currently hovered-over petal
+  # the currently hovered-over petal
   _overPetal: null
 
   # is a flower currently being displayed?
   _isActive: false
+
+  # are the blossoms facing left?
+  _isHeadedLeft: true
 
   # ---- Convenience references ---- #
 
@@ -96,17 +108,15 @@ Polymer
   # ---- Private methods ---- #
 
   _createPetalElement: (model, flowerIndex) ->
-    petal = document.createElement 'div'
-
     if not model.isBackPetal?
-      Polymer.dom(petal).classList.add 'petal'
-      Polymer.dom(petal).classList.add 'unselectable'
-      petal.addEventListener 'trackover', \
-        (detail) => @_hoverPetal petal, model, flowerIndex
-      petal.addEventListener 'down', \
-        (detail) => @_hoverPetal petal, model, flowerIndex
-      petal.addEventListener 'trackout', \
-        (detail) => @_unhoverPetal petal
+      scope = this
+      petal = createElement 'div',
+        classes: ['petal', 'unselectable']
+        listeners:
+          'trackover': (detail) -> scope._hoverPetal petal, model, flowerIndex
+          'down': (detail) -> scope._hoverPetal petal, model, flowerIndex
+          'trackout': (detail) -> scope._unhoverPetal petal
+
       Polymer.dom(petal).innerHTML =
         if model.display?
         then model.display(model.model)
@@ -117,22 +127,22 @@ Polymer
       else Polymer.dom(petal).classList.add 'branch'
     else
       # is a back-petal; don't draw anything for now?
+      petal = document.createElement 'div'
 
     return petal
 
   _spawnFlower: (origin, petals, backPetalPoint) ->
     spawningFlowerIndex = @_flowers.length
 
-    flower = document.createElement 'div'
-    flower.id = "flower#{spawningFlowerIndex}"
-    Polymer.dom(flower).classList.add 'flower'
-    Polymer.dom(this.$['picker-container']).appendChild flower
+    flower = createElement 'div',
+      id: "flower#{spawningFlowerIndex}"
+      classes: ['flower']
+      parent: @_container()
 
-    pistil = document.createElement 'div'
-    pistil.id = "pistil#{spawningFlowerIndex}"
-    Polymer.dom(pistil).classList.add 'pistil'
-    Polymer.dom(pistil).classList.add 'pistil'
-    Polymer.dom(flower).appendChild pistil
+    pistil = createElement 'div',
+      id: "pistil#{spawningFlowerIndex}"
+      classes: ['pistil']
+      parent: flower
 
     offsetFlower = do ->
       {top, left} = centerToOffset origin, flower
@@ -148,9 +158,11 @@ Polymer
       {top, left} = centerToOffset flowerCenter, pistil
       left: toCssFigure left
       top: toCssFigure top
-    this.transform \
-      "translate(#{offsetPistil.left}px, #{offsetPistil.top}px)", \
+    this.transform "translate(\
+      #{offsetPistil.left}px, \
+      #{offsetPistil.top}px)", \
       pistil
+
     pistil.addEventListener 'trackover', \
       (evt) => @_hoverPistil spawningFlowerIndex
 
@@ -160,29 +172,28 @@ Polymer
 
     angleOffset = (Math.PI / (2 * petals.length)) + Math.PI
 
-    petalElements = petals.map (elm, idx) =>
-      petal = @_createPetalElement elm, spawningFlowerIndex
-      Polymer.dom(flower).appendChild petal
+    petalElements =
+      petals.map (model) => @_createPetalElement model, spawningFlowerIndex
+    petalElements.forEach (elm) -> Polymer.dom(flower).appendChild elm
+    bounds = @_container().getBoundingClientRect()
+    {items, isHeadedLeft} =
+      calculatePositions \
+        origin,
+        @radius,
+        (petalElements.map (elm) -> elm.getBoundingClientRect()),
+        bounds,
+        @_isHeadedLeft
 
-      center = polToCar (Math.PI * idx / petals.length + angleOffset), @radius
-      offsetPetal = centerToOffset center, petal
+    @_isHeadedLeft = isHeadedLeft
 
-      potentialRect =
-        rectFromOffset petal.getBoundingClientRect(),
-          x: offsetPetal.left
-          y: offsetPetal.top
-
-      currentBounds = @_container().getBoundingClientRect()
-      if not (checkContainment potentialRect, currentBounds)
-        console.log 'not contained: ', petal, currentBounds
-
-      this.transform \
-        "translate(\
-          #{toCssFigure offsetPetal.left}px, \
-          #{toCssFigure offsetPetal.top}px)", \
-        petal
-
-      return petal
+    flowerBox = flower.getBoundingClientRect()
+    _.zip petalElements, items
+      .forEach ([elm, {position, rect}]) =>
+        @transform \
+          "translate(\
+            #{toCssFigure (rect.left - origin.x)}px, \
+            #{toCssFigure (rect.top - origin.y)}px)", \
+          elm
 
     @_flowers.push
       element: flower
@@ -214,29 +225,29 @@ Polymer
       if @_flowers.length != 0
         @_activateFlower @_flowers[@_flowers.length - 1]
 
-  _createLinkElementFrom: (fromFlowerIndex) ->
-    if (@_flowers.length - 1) > (fromFlowerIndex + 1)
-      console.log 'Not enough flowers to make that link!'
+  # _createLinkElementFrom: (fromFlowerIndex) ->
+  #   if (@_flowers.length - 1) > (fromFlowerIndex + 1)
+  #     console.log 'Not enough flowers to make that link!'
 
-    src = @_flowers[fromFlowerIndex]
-    dst = @_flowers[fromFlowerIndex + 1]
+  #   src = @_flowers[fromFlowerIndex]
+  #   dst = @_flowers[fromFlowerIndex + 1]
 
-    angle = -Math.acos ((dst.origin.x - src.origin.x) / @radius)
+  #   angle = -Math.acos ((dst.origin.x - src.origin.x) / @radius)
 
-    linkElm = document.createElement 'div'
-    Polymer.dom(@_container()).appendChild linkElm
-    Polymer.dom(linkElm).classList.add 'pistil-link'
-    linkElm.style['position'] = 'absolute'
-    linkElm.style['width'] = "#{@radius}px"
-    linkElm.style['height'] = '5px'
+  #   linkElm = document.createElement 'div'
+  #   Polymer.dom(@_container()).appendChild linkElm
+  #   Polymer.dom(linkElm).classList.add 'pistil-link'
+  #   linkElm.style['position'] = 'absolute'
+  #   linkElm.style['width'] = "#{@radius}px"
+  #   linkElm.style['height'] = '5px'
 
-    linkElm.style['transform'] = "rotate(#{angle}rad)"
-    # linkElm.style['-webkit-transform'] = "rotate(#{angle}rad)"
+  #   linkElm.style['transform'] = "rotate(#{angle}rad)"
+  #   # linkElm.style['-webkit-transform'] = "rotate(#{angle}rad)"
 
-    linkElm.style['background-color'] = '#faa'
-    linkElm.style['left'] = src.origin.x + 'px'
-    linkElm.style['top'] = src.origin.y + 'px'
-    linkElm.style['transform-origin'] = 'center left'
+  #   linkElm.style['background-color'] = '#faa'
+  #   linkElm.style['left'] = src.origin.x + 'px'
+  #   linkElm.style['top'] = src.origin.y + 'px'
+  #   linkElm.style['transform-origin'] = 'center left'
 
   # ---- Event handlers ---- #
 
