@@ -67,8 +67,9 @@ Polymer
     @_spawnFlower origin, @petals
 
   finish: ({x, y}) ->
+    console.log 'finishing at ', x, y
+
     if @_overPetal? and @_overPetal.isLeaf
-      console.log 'selected over petal', @_overPetal
       this.fire 'selected',
         petal: @_overPetal
         value: do =>
@@ -184,6 +185,10 @@ Polymer
         (petalElements.map (elm) -> elm.getBoundingClientRect()),
         bounds,
         @_isHeadedLeft
+
+    items
+      .map _.property 'position'
+      .forEach ({x, y}) -> console.log 'ITEM', x, y
 
     @_isHeadedLeft = isHeadedLeft
 
