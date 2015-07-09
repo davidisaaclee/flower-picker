@@ -67,7 +67,6 @@ Polymer
 
   ready: () ->
     Polymer.Gestures.add @_container(), 'track', @_handleTrack
-    @setScrollDirection 'none'
     # do @enable
 
   enable: () ->
@@ -270,6 +269,7 @@ Polymer
   # ---- Event handlers ---- #
 
   _hoverPetal: (petalElement, petalModel, flowerIndex) ->
+    console.log '_hoverPetal'
     if @_overPetal is petalModel
       # nothing to do
       return
