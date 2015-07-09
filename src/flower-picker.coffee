@@ -66,7 +66,8 @@ Polymer
       value: false
 
   ready: () ->
-    Polymer.Gestures.add @_container(), 'track', (_.bind @_handleTrack, this)
+    Polymer.Gestures.add @_container(), 'track', @_handleTrack
+    @setScrollDirection 'none'
     # do @enable
 
   enable: () ->
@@ -310,7 +311,7 @@ Polymer
       y: detail.y - fieldRect.top
 
   _lastHover: null
-  _handleTrack: (evt, detail) ->
+  _handleTrack: (evt, detail) =>
     console.log '_handleTrack'
     if @enabled
       console.log 'enabled'
