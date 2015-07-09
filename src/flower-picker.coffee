@@ -302,11 +302,13 @@ Polymer
 
   _lastHover: null
   _handleTrack: (evt, detail) ->
+    console.log 'asldfjaoiefjsdf'
+    
     evt.stopPropagation?()
     evt.preventDefault?()
 
     hover = detail.hover()
-    
+
     console.log 'flower-picker::_handleTrack', hover
     this.fire 'trackover', detail, {node: hover}
 
