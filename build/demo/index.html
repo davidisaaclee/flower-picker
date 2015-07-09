@@ -21,6 +21,7 @@
       var readyForStart  = true;
       
       fp.addEventListener('selected', function (evt) {
+        console.log('selected', evt.detail.value);
         document.querySelector('#pickedElement').innerHTML = 'selected: ' + evt.detail.value;
       });
       

@@ -68,6 +68,7 @@ Polymer
 
   finish: ({x, y}) ->
     if @_overPetal? and @_overPetal.isLeaf
+      console.log 'selected over petal', @_overPetal
       this.fire 'selected',
         petal: @_overPetal
         value: do =>
@@ -285,18 +286,6 @@ Polymer
     else if depth isnt @_flowers.length
       for i in [(@_flowers.length - 1)..(depth + 1)] by -1
         @_popFlower()
-
-  # _unhoverPistil: (index) ->
-  #   # TODO
-
-  # _handleDown: ({detail}) ->
-  #   if @_isActive
-  #     fieldRect = @_container().getBoundingClientRect()
-  #     @start
-  #       x: detail.x - fieldRect.left
-  #       y: detail.y - fieldRect.top
-  #   else
-  #     console.log detail
 
   _handleUp: ({detail}) ->
     fieldRect = @_container().getBoundingClientRect()
