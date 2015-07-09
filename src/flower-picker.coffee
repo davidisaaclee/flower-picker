@@ -67,15 +67,16 @@ Polymer
     @_spawnFlower origin, @petals
 
   finish: ({x, y}) ->
-    console.log 'finishing at ', x, y
-
     if @_overPetal? and @_overPetal.isLeaf
+      console.log 'flower-picker::selected'
       this.fire 'selected',
         petal: @_overPetal
         value: do =>
           if @_overPetal.value?
           then @_overPetal.value @_overPetal.model
           else @_overPetal.model
+    else
+      console.log 'flower-picker::not selected...'
 
     # delete each flower node; return flower list to empty
     detachFromParent = (element) ->
@@ -258,6 +259,7 @@ Polymer
   # ---- Event handlers ---- #
 
   _hoverPetal: (petalElement, petalModel, flowerIndex) ->
+    console.log 'flower-picker::_hoverPetal'
     if @_overPetal is petalModel
       # nothing to do
       return
