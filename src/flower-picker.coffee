@@ -68,15 +68,12 @@ Polymer
 
   finish: ({x, y}) ->
     if @_overPetal? and @_overPetal.isLeaf
-      console.log 'flower-picker::selected'
       this.fire 'selected',
         petal: @_overPetal
         value: do =>
           if @_overPetal.value?
           then @_overPetal.value @_overPetal.model
           else @_overPetal.model
-    else
-      console.log 'flower-picker::not selected...'
 
     # delete each flower node; return flower list to empty
     detachFromParent = (element) ->
@@ -187,10 +184,6 @@ Polymer
         bounds,
         @_isHeadedLeft
 
-    items
-      .map _.property 'position'
-      .forEach ({x, y}) -> console.log 'ITEM', x, y
-
     @_isHeadedLeft = isHeadedLeft
 
     flowerBox = flower.getBoundingClientRect()
@@ -259,7 +252,6 @@ Polymer
   # ---- Event handlers ---- #
 
   _hoverPetal: (petalElement, petalModel, flowerIndex) ->
-    console.log 'flower-picker::_hoverPetal'
     if @_overPetal is petalModel
       # nothing to do
       return
@@ -302,16 +294,12 @@ Polymer
 
   _lastHover: null
   _handleTrack: (evt, detail) ->
-    console.log 'asldfjaoiefjsdf'
-    
     evt.stopPropagation?()
     evt.preventDefault?()
 
     hover = detail.hover()
 
-    console.log 'flower-picker::_handleTrack', hover
     this.fire 'trackover', detail, {node: hover}
-
     if hover isnt @_lastHover
       this.fire 'trackout', detail, {node: @_lastHover}
       @_lastHover = hover
