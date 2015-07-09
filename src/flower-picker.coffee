@@ -61,12 +61,28 @@ Polymer
     radius:
       type: Number
       value: 80
+    enabled:
+      type: Boolean
+      value: false
+
+  ready: () ->
+    do @enable
+
+  enable: () ->
+    Polymer.Gestures.add @_container(), 'track', (_.bind @_handleTrack, this)
+    @enabled = true
+
+  disable: () ->
+    Polymer.Gestures.remove @_container(), 'track', (_.bind @_handleTrack, this)
+    @enabled = false
 
   start: (origin) ->
+    @enable()
     @_isActive = true
     @_spawnFlower origin, @petals
 
   finish: ({x, y}) ->
+    @disable()
     if @_overPetal? and @_overPetal.isLeaf
       this.fire 'selected',
         petal: @_overPetal
@@ -297,12 +313,14 @@ Polymer
     evt.stopPropagation?()
     evt.preventDefault?()
 
-    hover = detail.hover()
+    hover = evt.detail.hover()
 
-    this.fire 'trackover', detail, {node: hover}
+    this.fire 'trackover', evt.detail, {node: hover}
     if hover isnt @_lastHover
-      this.fire 'trackout', detail, {node: @_lastHover}
+      this.fire 'trackout', evt.detail, {node: @_lastHover}
       @_lastHover = hover
+  
+  _nullFn: () ->
 
 
   # ---- Observers ---- #
