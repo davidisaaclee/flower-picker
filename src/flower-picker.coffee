@@ -311,7 +311,9 @@ Polymer
 
   _lastHover: null
   _handleTrack: (evt, detail) ->
+    console.log '_handleTrack'
     if @enabled
+      console.log 'enabled'
       evt.stopPropagation?()
       evt.preventDefault?()
 
