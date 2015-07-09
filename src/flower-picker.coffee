@@ -306,6 +306,8 @@ Polymer
     evt.preventDefault?()
 
     hover = detail.hover()
+    
+    console.log 'flower-picker::_handleTrack', hover
     this.fire 'trackover', detail, {node: hover}
 
     if hover isnt @_lastHover
