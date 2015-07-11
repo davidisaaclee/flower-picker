@@ -64,9 +64,13 @@ Polymer
     enabled:
       type: Boolean
       value: false
+    stayWithin:
+      type: String
+      observer: '_stayWithinChanged'
 
   ready: () ->
-    Polymer.Gestures.add @_container(), 'track', @_handleTrack
+    # boundHandler = _.bind @_handleTrack, this
+    # Polymer.Gestures.add @_container(), 'track', boundHandler
     # do @enable
 
   enable: () ->
@@ -192,7 +196,8 @@ Polymer
     petalElements =
       petals.map (model) => @_createPetalElement model, spawningFlowerIndex
     petalElements.forEach (elm) -> Polymer.dom(flower).appendChild elm
-    bounds = @_container().getBoundingClientRect()
+    # bounds = @_container().getBoundingClientRect()
+    bounds = @_stayWithinElement?.getBoundingClientRect()
     {items, isHeadedLeft} =
       calculatePositions \
         origin,
@@ -269,7 +274,6 @@ Polymer
   # ---- Event handlers ---- #
 
   _hoverPetal: (petalElement, petalModel, flowerIndex) ->
-    console.log '_hoverPetal'
     if @_overPetal is petalModel
       # nothing to do
       return
@@ -311,10 +315,8 @@ Polymer
       y: detail.y - fieldRect.top
 
   _lastHover: null
-  _handleTrack: (evt, detail) =>
-    console.log '_handleTrack'
+  _handleTrack: (evt) ->
     if @enabled
-      console.log 'enabled'
       evt.stopPropagation?()
       evt.preventDefault?()
 
@@ -328,4 +330,8 @@ Polymer
   _nullFn: () ->
 
 
-  # ---- Observers ---- #
+  _stayWithinChanged: (newValue, oldValue) ->
+    @_stayWithinElement = document.querySelector ('#' + newValue)
+
+    boundHandler = _.bind @_handleTrack, this
+    Polymer.Gestures.add @_stayWithinElement, 'track', boundHandler

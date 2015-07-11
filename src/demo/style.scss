@@ -1,25 +1,26 @@
 body {
-  // width: 100vw;
-  // height: 60vh;
-
   margin: 0;
   padding: 0;
 
   background-color: #333;
-  // text-align: center;
 }
 
 #container {
+  pointer-events: none;
   margin: 0 auto;
-  width: 100vw;
-  height: 100vh;
-  background-color: #fee;
+  // width: 100vw;
+  // height: 100vh;
+  background-color: rgba(255, 240, 240, 0.2);
+}
 
-  // -webkit-tap-highlight-color: rgba(0,0,0,0);
+#background {
+  width: 100vw;
+  height: 80vh;
+  background-color: rgba(100, 120, 240, 1);
 }
 
 .flower-picker {
-  // -webkit-tap-highlight-color: rgba(0,0,0,0); 
+  pointer-events: auto;
 }
 
 .flower-picker .petal {

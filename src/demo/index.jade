@@ -7,53 +7,38 @@ html(lang='en')
     script(src="../../../webcomponentsjs/webcomponents-lite.js")
     link(rel="import", href="../flower-picker.html")
     link(rel="import", href="../../../polymer/polymer.html")
-    link(rel="import", href="../../../polymer-gestures/polymer-gestures.html")
     link(rel="stylesheet", href="style.css")
   body
     #container
-      flower-picker(radius="100", on-selected="handleSelected", touch-action="none")
+      flower-picker(radius="50",
+                    on-selected="handleSelected",
+                    touch-action="none",
+                    stay-within="background")
+    #background
     #pickedElement
 
     script.
       var fp = document.querySelector('flower-picker');
-      var readyForFinish = false;
-      var readyForStart  = true;
+      var bg = document.querySelector('#background');
 
-      fp.addEventListener('selected', function (evt) {
+      function handleSelect (evt) {
         console.log('selected', evt.detail.value);
         document.querySelector('#pickedElement').innerHTML = 'selected: ' + evt.detail.value;
-      });
-
-      function handleDown(evt) {
-        if (readyForStart) {
-          console.log('down')
-          readyForFinish = false;
-          readyForStart = false;
-          setTimeout(function () {
-            readyForFinish = true;
-            console.log('reset');
-          }, 200);
-          fp.start({x: evt.clientX, y: evt.clientY});
-        }
       }
 
-      function handleUp(evt) {
-        if (readyForFinish) {
-          readyForFinish = false;
-          readyForStart = true;
-          console.log('up')
-          fp.finish({x: evt.clientX, y: evt.clientY});
-        }
+      handleDown = function (evt) {
+        console.log('down');
+        fp.start({x: evt.detail.x, y: evt.detail.y});
       }
 
-      fp.addEventListener('down', handleDown);
-      fp.addEventListener('up', handleUp);
+      handleUp = function (evt) {
+        console.log('up');
+        fp.finish({x: evt.detail.x, y: evt.detail.y});
+      }
 
-      //- fp.addEventListener('mousedown', handleDown);
-      //- fp.addEventListener('mouseup', handleUp);
-      //- fp.addEventListener('touchdown', handleDown);
-      //- fp.addEventListener('touchup', handleUp);
-
+      Polymer.Gestures.add(bg, 'down', handleDown);
+      Polymer.Gestures.add(bg, 'up', handleUp);
+      fp.addEventListener('selected', handleSelect);
 
       var petals = [
         {
