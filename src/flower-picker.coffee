@@ -143,7 +143,7 @@ Polymer
         then model.display(model.model)
         else model.model
 
-      console.log 'petal set to ', Polymer.dom(petal).innerHTML, model.display(model.model)
+      console.log 'petal set to ', Polymer.dom(petal).innerHTML, model.display?, model.display(model.model)
 
       if model.isLeaf
       then Polymer.dom(petal).classList.add 'leaf'
