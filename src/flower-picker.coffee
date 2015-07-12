@@ -138,10 +138,12 @@ Polymer
           'down': (detail) -> scope._hoverPetal petal, model, flowerIndex
           'trackout': (detail) -> scope._unhoverPetal petal
 
-      Polymer.dom(petal).innerText =
+      Polymer.dom(petal).innerHTML =
         if model.display?
         then model.display(model.model)
         else model.model
+
+      console.log 'petal set to ', Polymer.dom(petal).innerHTML
 
       if model.isLeaf
       then Polymer.dom(petal).classList.add 'leaf'
