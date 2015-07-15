@@ -96,6 +96,8 @@ Polymer
       do @close
 
   select: (petalModel) ->
+    console.log 'selected', petalModel
+
     this.fire 'selected',
       petal: petalModel
       value: do =>
