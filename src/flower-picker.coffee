@@ -11,6 +11,9 @@ createElement = (tag, options) ->
   if options.listeners?
     for name, callback of options.listeners
       result.addEventListener name, callback
+  if options.attributes?
+    for attr, value of options.attributes
+      Polymer.dom(result).setAttribute attr, value
   if options.parent?
     Polymer.dom(options.parent).appendChild result
   return result
@@ -68,44 +71,49 @@ Polymer
       type: String
       observer: '_stayWithinChanged'
 
-  ready: () ->
-    # boundHandler = _.bind @_handleTrack, this
-    # Polymer.Gestures.add @_container(), 'track', boundHandler
-    # do @enable
-
-  enable: () ->
-    # Polymer.Gestures.add @_container(), 'track', (_.bind @_handleTrack, this)
-    @enabled = true
-
-  disable: () ->
-    # Polymer.Gestures.remove @_container(), 'track', (_.bind @_handleTrack, this)
-    @enabled = false
-
   start: (origin) ->
-    @enable()
-    @_isActive = true
-    @_spawnFlower origin, @petals
+    switch @_mode
+      when 'inactive'
+        @_spawnFlower origin, @petals
+      when 'active'
+        console.log 'called `start` when flower was already active'
+
+    @_mode = 'active'
 
   finish: ({x, y}) ->
-    @disable()
-    if @_overPetal? and @_overPetal.isLeaf
-      this.fire 'selected',
-        petal: @_overPetal
-        value: do =>
-          if @_overPetal.value?
-          then @_overPetal.value @_overPetal.model
-          else @_overPetal.model
+    if @_mode isnt 'active'
+      console.log 'finishing with nonactive mode', @_mode
+      debugger
 
-    # delete each flower node; return flower list to empty
+    if @_overPetal? and @_overPetal.isLeaf and not @_overPetal.wantsFocus
+      @select @_overPetal
+
+    if @_overPetal? and @_overPetal.wantsFocus
+      do @_overPetal.focus
+      @_mode = 'input'
+
+    if @_mode isnt 'input'
+      do @close
+
+  select: (petalModel) ->
+    this.fire 'selected',
+      petal: petalModel
+      value: do =>
+        if petalModel.value?
+        then petalModel.value petalModel.model
+        else petalModel.model
+
+  # delete each flower node; return flower list to empty
+  close: () ->
     detachFromParent = (element) ->
       parent = Polymer.dom(element).parentNode
       Polymer.dom(parent).removeChild(element)
     _.each @_flowers,
-      _.flow (({element}) -> element), detachFromParent
+      _.flow (_.property 'element'), detachFromParent
 
     @_flowers = []
     @_overPetal = null
-    @_isActive = false
+    @_mode = 'inactive'
 
   # ---- State fields ---- #
 
@@ -113,13 +121,15 @@ Polymer
   _flowers: []
 
   # the currently hovered-over petal
+  # {isLeaf :: boolean, value :: <model type> -> string, model :: <model type>}
+  #   | {wantsFocus :: bolean, focus :: ->}   # for modal petals
   _overPetal: null
-
-  # is a flower currently being displayed?
-  _isActive: false
 
   # are the blossoms facing left?
   _isHeadedLeft: true
+
+  # inactive, active, input
+  _mode: 'inactive'
 
   # ---- Convenience references ---- #
 
@@ -129,8 +139,9 @@ Polymer
   # ---- Private methods ---- #
 
   _createPetalElement: (model, flowerIndex) ->
-    if not model.isBackPetal?
-      scope = this
+    scope = this
+
+    if not model.type? or model.type is 'choice'
       petal = createElement 'div',
         classes: ['petal', 'unselectable']
         listeners:
@@ -146,13 +157,50 @@ Polymer
       if model.isLeaf
       then Polymer.dom(petal).classList.add 'leaf'
       else Polymer.dom(petal).classList.add 'branch'
-    else
-      # is a back-petal; don't draw anything for now?
-      petal = document.createElement 'div'
 
+      return petal
+    else if model.type is 'input'
+      @_createInputPetal (flowerIndex)
+
+  _createInputPetal: (flowerIndex) ->
+    scope = this
+    model =
+      isLeaf: true
+      model: ""
+
+    form = createElement 'form',
+      classes: ['input-petal-form']
+      attributes:
+        'novalidate': true
+      listeners:
+        'submit': (evt) ->
+          do evt.preventDefault
+          scope.select model
+          do scope.close
+    searchBox = createElement 'input',
+      classes: ['input-petal-box']
+      attributes:
+        'type': 'text'
+        'autocorrect': 'off'
+      listeners:
+        'input': (evt) -> model.model = evt.target.value
+    # finish adding circular dependencies
+    _.extend model,
+      wantsFocus: true
+      focus: () -> do searchBox.focus
+    petal = createElement 'div',
+      classes: ['petal', 'unselectable', 'input-petal']
+      listeners:
+        'trackover': (detail) -> scope._hoverPetal petal, model, flowerIndex
+        'down': (detail) -> scope._hoverPetal petal, model, flowerIndex
+        'trackout': (detail) -> scope._unhoverPetal petal
+
+    Polymer.dom(form).appendChild searchBox
+    Polymer.dom(petal).appendChild form
     return petal
 
-  _spawnFlower: (origin, petals, backPetalPoint) ->
+
+  _spawnFlower: (origin, petals) ->
     spawningFlowerIndex = @_flowers.length
 
     flower = createElement 'div',
@@ -196,7 +244,6 @@ Polymer
     petalElements =
       petals.map (model) => @_createPetalElement model, spawningFlowerIndex
     petalElements.forEach (elm) -> Polymer.dom(flower).appendChild elm
-    # bounds = @_container().getBoundingClientRect()
     bounds = @_stayWithinElement?.getBoundingClientRect()
     {items, isHeadedLeft} =
       calculatePositions \
@@ -316,7 +363,7 @@ Polymer
 
   _lastHover: null
   _handleTrack: (evt) ->
-    if @enabled
+    if @_mode is 'active'
       evt.stopPropagation?()
       evt.preventDefault?()
 
