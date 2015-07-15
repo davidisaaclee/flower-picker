@@ -160,13 +160,12 @@ Polymer
 
       return petal
     else if model.type is 'input'
-      @_createInputPetal (flowerIndex)
+      @_createInputPetal (model, flowerIndex)
 
-  _createInputPetal: (flowerIndex) ->
+  _createInputPetal: (model, flowerIndex) ->
     scope = this
-    model =
-      isLeaf: true
-      model: ""
+    console.log '_createInputPetal', model
+    model.model = ""
 
     form = createElement 'form',
       classes: ['input-petal-form']
