@@ -160,7 +160,7 @@ Polymer
 
       return petal
     else if model.type is 'input'
-      @_createInputPetal (model, flowerIndex)
+      @_createInputPetal model, flowerIndex
 
   _createInputPetal: (model, flowerIndex) ->
     scope = this
