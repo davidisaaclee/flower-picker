@@ -1,7 +1,7 @@
 _ = require 'lodash'
 {calculatePositions} = require './radial-plotter'
 
-createElement = (tag, options) ->
+createElement = (tag, options = {}) ->
   result = document.createElement tag
   if options.id?
     result.id = options.id
@@ -16,6 +16,9 @@ createElement = (tag, options) ->
       Polymer.dom(result).setAttribute attr, value
   if options.parent?
     Polymer.dom(options.parent).appendChild result
+  if options.style?
+    (result.style[key] = value) for key, value of options.style
+    console.log 'set style', key, result.style[key]
   return result
 
 polToCar = (angle, radius) ->
@@ -96,13 +99,11 @@ Polymer
       do @close
 
   select: (petalModel) ->
-    console.log 'selected', petalModel
-
     this.fire 'selected',
       petal: petalModel
       value: do =>
         if petalModel.value?
-        then petalModel.value petalModel.model
+        then petalModel.value petalModel.model, petalModel.data
         else petalModel.model
 
   # delete each flower node; return flower list to empty
@@ -153,7 +154,7 @@ Polymer
 
       Polymer.dom(petal).innerHTML =
         if model.display?
-        then model.display(model.model)
+        then model.display model.model, model.data
         else model.model
 
       if model.isLeaf
@@ -166,9 +167,15 @@ Polymer
 
   _createInputPetal: (model, flowerIndex) ->
     scope = this
-    console.log '_createInputPetal', model
-    model.model = ""
+    model.data = ""
 
+    petal = createElement 'div',
+      classes: ['petal', 'unselectable', 'input-petal']
+      listeners:
+        'trackover': (detail) -> scope._hoverPetal petal, model, flowerIndex
+        'down': (detail) -> scope._hoverPetal petal, model, flowerIndex
+        'trackout': (detail) -> scope._unhoverPetal petal
+    petalText = createElement 'div'
     form = createElement 'form',
       classes: ['input-petal-form']
       attributes:
@@ -178,23 +185,30 @@ Polymer
           do evt.preventDefault
           scope.select model
           do scope.close
+      style:
+        'display': 'none'
     searchBox = createElement 'input',
       classes: ['input-petal-box']
       attributes:
         'type': 'text'
         'autocorrect': 'off'
       listeners:
-        'input': (evt) -> model.model = evt.target.value
+        'input': (evt) ->
+          model.data = evt.target.value
+
+    do updateDisplay = () ->
+      Polymer.dom(petalText).textContent =
+        if model.display?
+        then model.display model.model, model.data
+        else model.model
+    Polymer.dom(petal).appendChild petalText
     # finish adding circular dependencies
     _.extend model,
       wantsFocus: true
-      focus: () -> do searchBox.focus
-    petal = createElement 'div',
-      classes: ['petal', 'unselectable', 'input-petal']
-      listeners:
-        'trackover': (detail) -> scope._hoverPetal petal, model, flowerIndex
-        'down': (detail) -> scope._hoverPetal petal, model, flowerIndex
-        'trackout': (detail) -> scope._unhoverPetal petal
+      focus: () ->
+        form.style['display'] = 'initial'
+        do searchBox.focus
+    searchBox.addEventListener 'input', updateDisplay
 
     Polymer.dom(form).appendChild searchBox
     Polymer.dom(petal).appendChild form

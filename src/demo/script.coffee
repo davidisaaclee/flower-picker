@@ -51,6 +51,12 @@ petals = [
   ]
  ,
   type: 'input'
+  model: '(input `string`)'
+  display: (model, data) ->
+    if data? and data.length > 0
+    then "(input #{data})"
+    else model
+  value: (model, data) -> "(input #{data})"
   isLeaf: true
 ]
 fp.petals = petals;
