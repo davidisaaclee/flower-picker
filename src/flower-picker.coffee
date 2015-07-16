@@ -152,7 +152,7 @@ Polymer
           'down': (detail) -> scope._hoverPetal petal, model, flowerIndex
           'trackout': (detail) -> scope._unhoverPetal petal
 
-      Polymer.dom(petal).innerHTML =
+      Polymer.dom(petal).textContent =
         if model.display?
         then model.display model.model, model.data
         else model.model
