@@ -46,15 +46,6 @@ options['jasmine'] = {
   }
 };
 
-
-// gulp.task('default', ['scripts', 'jade', 'sass', 'watch']);
-
-// gulp.task('scripts', function () {
-//   return gulp.src(options.coffee.src)
-//     .pipe(coffeeify(options.coffee.options))
-//     .pipe(gulp.dest(options.coffee.dst));
-// });
-
 gulp.task('default', ['coffee', 'jade', 'sass', 'watch']);
 gulp.task('coffee', function () {
   var bundle = browserify(_.extend(options.coffee.options, {
@@ -93,7 +84,7 @@ gulp.task('jade', function () {
 });
 
 gulp.task('watch', function () {
-  gulp.watch(options.coffee.src, ['scripts']);
+  gulp.watch(options.coffee.src, ['coffee']);
   gulp.watch(options.sass.src, ['sass']);
   gulp.watch(options.jade.src, ['jade']);
 });
