@@ -10,6 +10,7 @@ var jade       = require('gulp-jade');
 var notify     = require('gulp-notify');
 var source     = require('vinyl-source-stream');
 var buffer     = require('vinyl-buffer');
+var del        = require('del');
 
 
 var options = {};
@@ -46,7 +47,7 @@ options['jasmine'] = {
   }
 };
 
-gulp.task('default', ['coffee', 'jade', 'sass', 'watch']);
+gulp.task('default', ['coffee', 'demo_script', 'jade', 'sass', 'watch']);
 gulp.task('coffee', function () {
   var bundle = browserify(_.extend(options.coffee.options, {
     entries: './flower-picker.coffee',
@@ -71,6 +72,30 @@ gulp.task('coffee', function () {
     .pipe(gulp.dest('./build'));
 });
 
+gulp.task('demo_script', function () {
+  var bundle = browserify(_.extend(options.coffee.options, {
+    entries: './demo/script.coffee',
+    outputName: 'script.js',
+    transform: [coffeeify]
+  })).bundle();
+
+  bundle
+    .on('error', notify.onError({
+      title: "CoffeeScript error",
+      message: '<%= error.message %>',
+      sound: "Frog", // case sensitive
+      icon: false
+    }))
+    .on('error', function (error) {
+      console.log(error);
+    });
+
+  return bundle
+    .pipe(source('script.js'))
+    .pipe(buffer())
+    .pipe(gulp.dest('./build/demo'));
+});
+
 gulp.task('sass', function () {
   return gulp.src(options.sass.src)
     .pipe(sass().on('error', sass.logError))
@@ -87,4 +112,11 @@ gulp.task('watch', function () {
   gulp.watch(options.coffee.src, ['coffee']);
   gulp.watch(options.sass.src, ['sass']);
   gulp.watch(options.jade.src, ['jade']);
+});
+
+
+gulp.task('clean', function () {
+  del([
+    'build/**'
+  ]);
 });

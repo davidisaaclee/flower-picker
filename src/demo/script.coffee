@@ -1,12 +1,14 @@
 _ = require 'lodash'
 
-fp = document.querySelector 'flower-picker';
-bg = document.querySelector '#background';
+fp = document.querySelector 'flower-picker'
+bg = document.querySelector '#background'
+
+fp.stayWithinElement = bg
 
 handleSelect = (evt) ->
   console.log 'selected', evt.detail.value
   document.querySelector('#pickedElement').innerHTML =
-    'selected: ' + evt.detail.value;
+    'selected: ' + evt.detail.value
 
 handleDown = (evt) ->
   console.log 'down'
@@ -59,4 +61,4 @@ petals = [
   value: (model, data) -> "(input #{data})"
   isLeaf: true
 ]
-fp.petals = petals;
+fp.petals = petals

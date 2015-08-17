@@ -69,9 +69,12 @@ Polymer
     enabled:
       type: Boolean
       value: false
-    stayWithin:
+    stayWithinId:
       type: String
-      observer: '_stayWithinChanged'
+      observer: '_stayWithinIdChanged'
+    stayWithinElement:
+      type: Object
+      observer: '_stayWithinElementChanged'
 
   start: (origin) ->
     switch @_mode
@@ -258,7 +261,7 @@ Polymer
     petalElements =
       petals.map (model) => @_createPetalElement model, spawningFlowerIndex
     petalElements.forEach (elm) -> Polymer.dom(flower).appendChild elm
-    bounds = @_stayWithinElement?.getBoundingClientRect()
+    bounds = @stayWithinElement?.getBoundingClientRect()
     {items, isHeadedLeft} =
       calculatePositions \
         origin,
@@ -391,9 +394,11 @@ Polymer
   _nullFn: () ->
 
 
-  _stayWithinChanged: (newValue, oldValue) ->
-    @_stayWithinElement = Polymer.dom(document).querySelector ('#' + newValue)
+  _stayWithinIdChanged: (newValue, oldValue) ->
+    @stayWithinElement = Polymer.dom(document).querySelector ('#' + newValue)
 
-    boundHandler = _.bind @_handleTrack, this
-    # Polymer.Gestures.add @_stayWithinElement, 'track', boundHandler
-    @_stayWithinElement.addEventListener 'track', boundHandler
+  _stayWithinElementChanged: () ->
+    Polymer.Gestures.add \
+      @stayWithinElement,
+      'track',
+      (_.bind @_handleTrack, this)
