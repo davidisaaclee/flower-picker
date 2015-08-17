@@ -1,9 +1,15 @@
 'use strict';
 
+var _          = require('lodash');
 var gulp       = require('gulp');
 var sass       = require('gulp-sass');
-var coffeeify  = require('gulp-coffeeify');
+var browserify  = require('browserify');
+// var coffeeify  = require('gulp-coffeeify');
+var coffeeify  = require('coffeeify');
 var jade       = require('gulp-jade');
+var notify     = require('gulp-notify');
+var source     = require('vinyl-source-stream');
+var buffer     = require('vinyl-buffer');
 
 
 var options = {};
@@ -12,10 +18,11 @@ options['coffee'] = {
   src: './src/**/*.coffee',
   dst: './build',
   options: {
-    options: {
-      debug: true,
-      paths: [__dirname + '/node_modules', __dirname + '/src/scripts']
-    }
+    debug: true,
+    basedir: __dirname + '/src',
+    paths: [__dirname + '/node_modules', __dirname + '/src'],
+    dest: './build',
+    extensions: ['.coffee']
   }
 };
 
@@ -40,12 +47,37 @@ options['jasmine'] = {
 };
 
 
-gulp.task('default', ['scripts', 'jade', 'sass', 'watch']);
+// gulp.task('default', ['scripts', 'jade', 'sass', 'watch']);
 
-gulp.task('scripts', function () {
-  return gulp.src(options.coffee.src)
-    .pipe(coffeeify(options.coffee.options))
-    .pipe(gulp.dest(options.coffee.dst));
+// gulp.task('scripts', function () {
+//   return gulp.src(options.coffee.src)
+//     .pipe(coffeeify(options.coffee.options))
+//     .pipe(gulp.dest(options.coffee.dst));
+// });
+
+gulp.task('default', ['coffee', 'jade', 'sass', 'watch']);
+gulp.task('coffee', function () {
+  var bundle = browserify(_.extend(options.coffee.options, {
+    entries: './flower-picker.coffee',
+    outputName: 'flower-picker.js',
+    transform: [coffeeify]
+  })).bundle();
+
+  bundle
+    .on('error', notify.onError({
+      title: "CoffeeScript error",
+      message: '<%= error.message %>',
+      sound: "Frog", // case sensitive
+      icon: false
+    }))
+    .on('error', function (error) {
+      console.log(error);
+    });
+
+  return bundle
+    .pipe(source('flower-picker.js'))
+    .pipe(buffer())
+    .pipe(gulp.dest('./build'));
 });
 
 gulp.task('sass', function () {

@@ -18,7 +18,6 @@ createElement = (tag, options = {}) ->
     Polymer.dom(options.parent).appendChild result
   if options.style?
     (result.style[key] = value) for key, value of options.style
-    console.log 'set style', key, result.style[key]
   return result
 
 polToCar = (angle, radius) ->
@@ -79,13 +78,13 @@ Polymer
       when 'inactive'
         @_spawnFlower origin, @petals
       when 'active'
-        console.log 'called `start` when flower was already active'
+        throw new Error 'invoked `flower-picker::start()` when flower was already active'
 
     @_mode = 'active'
 
   finish: ({x, y}) ->
     if @_mode isnt 'active'
-      console.log 'finishing with nonactive mode', @_mode
+      console.error 'finishing with nonactive mode', @_mode
       debugger
 
     if @_overPetal? and @_overPetal.isLeaf and not @_overPetal.wantsFocus
@@ -364,7 +363,7 @@ Polymer
 
   _hoverPistil: (depth) ->
     if depth >= @_flowers.length
-      console.log "hovering over pistil of depth #{depth}, \
+      console.error "hovering over pistil of depth #{depth}, \
         but the flower stack is only #{@_flowers.length} deep."
     else if depth isnt @_flowers.length
       for i in [(@_flowers.length - 1)..(depth + 1)] by -1
@@ -396,4 +395,5 @@ Polymer
     @_stayWithinElement = document.querySelector ('#' + newValue)
 
     boundHandler = _.bind @_handleTrack, this
-    Polymer.Gestures.add @_stayWithinElement, 'track', boundHandler
+    # Polymer.Gestures.add @_stayWithinElement, 'track', boundHandler
+    @_stayWithinElement.addEventListener 'track', boundHandler
