@@ -392,7 +392,7 @@ Polymer
 
 
   _stayWithinChanged: (newValue, oldValue) ->
-    @_stayWithinElement = document.querySelector ('#' + newValue)
+    @_stayWithinElement = Polymer.dom(document).querySelector ('#' + newValue)
 
     boundHandler = _.bind @_handleTrack, this
     # Polymer.Gestures.add @_stayWithinElement, 'track', boundHandler
